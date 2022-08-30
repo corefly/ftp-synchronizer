@@ -32,26 +32,6 @@ public class FtpSynchronizer : IDisposable
 
     private async Task SyncDirectory()
     {
-        foreach (var file in Directory.EnumerateFiles(_localDirectory, "*.*", SearchOption.AllDirectories))
-        {
-            await SyncFile(file);
-        }
-    }
-
-    private async Task SyncFile(string file)
-    {
-        var relativeFilePath = PathUtil.GetRelativePath(_localDirectory, file);
-        var remotePath = Path.Combine(_ftpDirectory, relativeFilePath);
-        var compareResult = await _client.CompareFileAsync(file, remotePath);
-
-        if (compareResult is FtpCompareResult.NotEqual or FtpCompareResult.FileNotExisting)
-        {
-            var status = await _client.UploadFileAsync(file, remotePath, FtpRemoteExists.Overwrite, true);
-
-            if (status == FtpStatus.Success)
-            {
-                Console.WriteLine($"Copied: {file}");
-            }
-        }
+        await _client.UploadDirectoryAsync(_localDirectory, _ftpDirectory, FtpFolderSyncMode.Mirror);
     }
 }
